@@ -316,9 +316,12 @@ export default function DoseCalculator() {
       <section className="relative h-[400px] md:h-[500px] overflow-hidden">
         <div className="absolute inset-0">
           <img 
-            src="https://images.unsplash.com/photo-1631217818242-5033523c5735?auto=format&fit=crop&q=80&w=2000" 
+            src="/poster.jpg" 
             alt="Paraibu Hero"
             className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1631217818242-5033523c5735?auto=format&fit=crop&q=80&w=2000";
+            }}
             referrerPolicy="no-referrer"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/40 to-transparent" />
