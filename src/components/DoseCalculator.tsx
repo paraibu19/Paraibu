@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format, addHours } from 'date-fns';
-import { Calculator, Mail, FileText, AlertCircle, CheckCircle2, Loader2, ChevronRight, History, Scale, Droplets, Languages } from 'lucide-react';
+import { Calculator, User, FileText, AlertCircle, CheckCircle2, Loader2, ChevronRight, History, Scale, Droplets, Languages } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { MedicationType, ScheduleItem, FormData } from '@/src/types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -12,8 +12,8 @@ const translations = {
   en: {
     title: "Paraibu Dose Calculation",
     subtitle: "Professional pediatric medication dose calculation assistant.",
-    emailLabel: "Patient Email",
-    emailPlaceholder: "parent@example.com",
+    patientNameLabel: "Patient Name",
+    patientNamePlaceholder: "Enter child's name",
     weightLabel: "Patient Weight (kg)",
     weightPlaceholder: "Enter weight in kg",
     prevMedLabel: "Previous Medication Taken",
@@ -53,8 +53,8 @@ const translations = {
   ar: {
     title: "بارايبو - حساب الجرعة",
     subtitle: "مساعد مهني لحساب جرعات أدوية الأطفال.",
-    emailLabel: "البريد الإلكتروني للمريض",
-    emailPlaceholder: "parent@example.com",
+    patientNameLabel: "اسم المريض",
+    patientNamePlaceholder: "أدخل اسم الطفل",
     weightLabel: "وزن المريض (كجم)",
     weightPlaceholder: "أدخل الوزن بالكجم",
     prevMedLabel: "الدواء السابق الذي تم تناوله",
@@ -112,7 +112,7 @@ export default function DoseCalculator() {
   const isRTL = language === 'ar';
 
   const [formData, setFormData] = useState<FormData>({
-    email: '',
+    patientName: '',
     weight: 0,
     previousMedication: 'None',
     paracetamolConcentration: '120mg/5ml',
@@ -234,7 +234,7 @@ export default function DoseCalculator() {
 
       doc.setFontSize(14);
       doc.setTextColor(0);
-      doc.text(`${en.dear} ${formData.email},`, 20, 45);
+      doc.text(`${en.dear} ${formData.patientName},`, 20, 45);
       doc.text(`${en.patientWeight}: ${formData.weight} ${en.kg}`, 20, 55);
 
       // Medications
@@ -289,7 +289,7 @@ export default function DoseCalculator() {
       doc.setTextColor(150);
       doc.text(`${en.copyright} | Contact: paraibu19@gmail.com`, 105, pageHeight - 10, { align: 'center' });
 
-      doc.save(`Paraibu_${formData.email.split('@')[0]}_Report.pdf`);
+      doc.save(`Paraibu_${formData.patientName.replace(/\s+/g, '_')}_Report.pdf`);
       setStatus({ type: 'success', message: t.successPdf });
     } catch (error) {
       console.error('PDF Generation Error:', error);
@@ -365,16 +365,16 @@ export default function DoseCalculator() {
             <div className="space-y-4">
               <label className="block">
                 <span className={cn("flex items-center text-sm font-semibold text-gray-700 mb-1.5", isRTL && "flex-row-reverse")}>
-                  <Mail className={cn("w-4 h-4 text-blue-500", isRTL ? "ml-2" : "mr-2")} />
-                  {t.emailLabel}
+                  <User className={cn("w-4 h-4 text-blue-500", isRTL ? "ml-2" : "mr-2")} />
+                  {t.patientNameLabel}
                 </span>
                 <input
-                  type="email"
+                  type="text"
                   required
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                  placeholder={t.emailPlaceholder}
-                  value={formData.email}
-                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                  placeholder={t.patientNamePlaceholder}
+                  value={formData.patientName}
+                  onChange={e => setFormData({ ...formData, patientName: e.target.value })}
                 />
               </label>
 

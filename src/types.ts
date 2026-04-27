@@ -19,7 +19,7 @@ export interface ScheduleItem {
 }
 
 export interface FormData {
-  email: string;
+  patientName: string;
   weight: number;
   previousMedication: MedicationType;
   paracetamolConcentration: string;
