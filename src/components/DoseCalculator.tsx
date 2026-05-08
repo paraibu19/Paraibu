@@ -419,11 +419,18 @@ export default function DoseCalculator() {
           return;
         }
 
+        // Fix for PT0M trigger issue in 'ics' package
+        // The package results in -PT or PT for 0 durations, which many calendars ignore.
+        // We replace it with PT0M as requested by the user.
+        const fixedValue = value
+          .replace(/TRIGGER:-PT\r\n/g, 'TRIGGER:PT0M\r\n')
+          .replace(/TRIGGER:PT\r\n/g, 'TRIGGER:PT0M\r\n');
+
         try {
           const patientSafeName = (formData.patientName || 'Child').trim().substring(0, 20).replace(/[^a-z0-9]/gi, '_');
           const fileName = `Paraibu_Reminders_${patientSafeName}.ics`;
           
-          const blob = new Blob([value], { type: 'text/calendar;charset=utf-8' });
+          const blob = new Blob([fixedValue], { type: 'text/calendar;charset=utf-8' });
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
@@ -639,54 +646,107 @@ export default function DoseCalculator() {
                   <div 
                     className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 p-8 space-y-6"
                   >
-                    <div className={cn("flex flex-col sm:flex-row items-center gap-4 justify-between", isRTL && "sm:flex-row-reverse")}>
-                      <h3 className="text-xl font-bold text-gray-900 flex items-center">
-                        <CheckCircle2 className={cn("w-6 h-6 text-green-500", isRTL ? "ml-3" : "mr-3")} />
-                        {t.calculatedDoses}
-                      </h3>
-                      <div className="flex flex-col gap-4">
-                        <div className="flex flex-wrap items-center gap-4 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
-                          <label className="flex items-center space-x-2 cursor-pointer group">
-                            <input
-                              type="checkbox"
-                              checked={formData.includeParacetamol}
-                              onChange={(e) => setFormData({ ...formData, includeParacetamol: e.target.checked })}
-                              className="w-5 h-5 rounded-md border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                            />
-                            <span className={cn("text-xs font-bold text-gray-700 group-hover:text-blue-600 transition-colors", isRTL && "mr-2")}>
-                              {t.paracetamolDoses}
-                            </span>
-                          </label>
-                          <label className="flex items-center space-x-2 cursor-pointer group">
-                            <input
-                              type="checkbox"
-                              checked={formData.includeIbuprofen}
-                              onChange={(e) => setFormData({ ...formData, includeIbuprofen: e.target.checked })}
-                              className="w-5 h-5 rounded-md border-gray-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
-                            />
-                            <span className={cn("text-xs font-bold text-gray-700 group-hover:text-orange-600 transition-colors", isRTL && "mr-2")}>
-                              {t.ibuprofenDoses}
-                            </span>
-                          </label>
+                    <div className={cn("flex flex-col gap-6", isRTL && "text-right")}>
+                      <div className={cn("flex flex-col md:flex-row md:items-end justify-between gap-4", isRTL && "md:flex-row-reverse")}>
+                        <div className="space-y-1">
+                          <h3 className="text-2xl font-black text-gray-900 tracking-tight flex items-center">
+                            <CheckCircle2 className={cn("w-7 h-7 text-green-500", isRTL ? "ml-3" : "mr-3")} />
+                            {t.calculatedDoses}
+                          </h3>
+                          <p className="text-sm font-bold text-gray-400 max-w-sm">
+                            {language === 'en' 
+                              ? "Precise dosage based on weight and standard clinical guidelines." 
+                              : "جرعات دقيقة محسوبة بناءً على الوزن والإرشادات الطبية المعتمدة."}
+                          </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                           <button
-                            onClick={handleDownloadCalendar}
-                            disabled={isSubmitting || (!formData.includeParacetamol && !formData.includeIbuprofen)}
-                            className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-100 transition-all disabled:opacity-50 border border-blue-100"
-                          >
-                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarDays className="w-4 h-4" />}
-                            <span>{t.addToCalendar}</span>
-                          </button>
-                          <button
                             onClick={handleDownloadPDF}
                             disabled={isSubmitting}
-                            className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all disabled:opacity-50"
+                            className="flex items-center space-x-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-black transition-all hover:scale-105 active:scale-95 disabled:opacity-50 shadow-lg shadow-gray-200"
                           >
                             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
                             <span>{t.downloadPdf}</span>
                           </button>
                         </div>
+                      </div>
+
+                      <div className="bg-gray-50/80 backdrop-blur-sm p-6 rounded-[2rem] border border-gray-100 flex flex-col gap-6">
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                              {language === 'en' ? "Calendar Sync Options" : "خيارات الـمزامنة مع التقويم"}
+                            </h4>
+                            <span className="px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-black rounded-full uppercase">5 Days schedule</span>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-3">
+                            <label className={cn(
+                              "flex-1 min-w-[140px] flex items-center p-3 rounded-2xl border transition-all cursor-pointer group",
+                              formData.includeParacetamol 
+                                ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm" 
+                                : "bg-white border-gray-200 text-gray-500 hover:border-blue-200"
+                            )}>
+                              <input
+                                type="checkbox"
+                                checked={formData.includeParacetamol}
+                                onChange={(e) => setFormData({ ...formData, includeParacetamol: e.target.checked })}
+                                className="hidden"
+                              />
+                              <div className={cn(
+                                "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
+                                formData.includeParacetamol ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-gray-300"
+                              )}>
+                                {formData.includeParacetamol && <CheckCircle2 className="w-3.5 h-3.5" />}
+                              </div>
+                              <span className={cn("ml-3 text-xs font-black uppercase tracking-tight", isRTL && "mr-3 ml-0")}>
+                                {t.paracetamolDoses}
+                              </span>
+                            </label>
+
+                            <label className={cn(
+                              "flex-1 min-w-[140px] flex items-center p-3 rounded-2xl border transition-all cursor-pointer group",
+                              formData.includeIbuprofen 
+                                ? "bg-orange-50 border-orange-200 text-orange-700 shadow-sm" 
+                                : "bg-white border-gray-200 text-gray-500 hover:border-orange-200"
+                            )}>
+                              <input
+                                type="checkbox"
+                                checked={formData.includeIbuprofen}
+                                onChange={(e) => setFormData({ ...formData, includeIbuprofen: e.target.checked })}
+                                className="hidden"
+                              />
+                              <div className={cn(
+                                "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
+                                formData.includeIbuprofen ? "bg-orange-600 border-orange-600 text-white" : "bg-white border-gray-300"
+                              )}>
+                                {formData.includeIbuprofen && <CheckCircle2 className="w-3.5 h-3.5" />}
+                              </div>
+                              <span className={cn("ml-3 text-xs font-black uppercase tracking-tight", isRTL && "mr-3 ml-0")}>
+                                {t.ibuprofenDoses}
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={handleDownloadCalendar}
+                          disabled={isSubmitting || (!formData.includeParacetamol && !formData.includeIbuprofen)}
+                          className="w-full flex items-center justify-center space-x-3 px-6 py-4 bg-white text-blue-600 rounded-2xl text-sm font-black hover:bg-blue-600 hover:text-white transition-all transform active:scale-[0.98] disabled:opacity-50 border-2 border-blue-600 shadow-lg shadow-blue-100 group"
+                        >
+                          {isSubmitting ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <CalendarDays className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                          )}
+                          <span>{t.addToCalendar}</span>
+                        </button>
+                        
+                        <p className="text-[10px] font-bold text-center text-gray-400">
+                          {language === 'en' 
+                            ? "Exports an .ics file compatible with Google, Apple & Outlook calendars." 
+                            : "يصدر ملف .ics متوافق مع تقويم جوجل، ابل، واوتلوك."}
+                        </p>
                       </div>
                     </div>
 

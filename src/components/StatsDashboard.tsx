@@ -120,7 +120,7 @@ export default function StatsDashboard({ onClose }: { onClose: () => void }) {
             </div>
             <div>
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">Insights Dashboard</h2>
-              <p className="text-xs md:text-sm text-gray-500 font-medium">Real-time platform activity metrics</p>
+              <p className="text-xs md:text-sm text-gray-500 font-medium">Platform activity metrics</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
