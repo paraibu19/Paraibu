@@ -316,14 +316,12 @@ export default function DoseCalculator() {
       <section className="relative h-[400px] md:h-[500px] overflow-hidden">
         <div className="absolute inset-0">
           <img 
-            src="/Web_picture.jpg" 
+            src="https://images.unsplash.com/photo-1631217818242-5033523c5735?auto=format&fit=crop&q=80&w=2000" 
             alt="Paraibu - Pediatric Dose Calculator"
             className="w-full h-full object-cover"
             onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              console.error("Failed to load Web_picture.jpg, using high-quality fallback.");
-              // Using a high-quality pediatric clinic photo as fallback
-              target.src = "https://images.unsplash.com/photo-1631217818242-5033523c5735?auto=format&fit=crop&q=80&w=2000";
+              // Final fallback if the Unsplash URL somehow fails
+              (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1551076805-e1869033e561?q=80&w=2000&auto=format&fit=crop";
             }}
             referrerPolicy="no-referrer"
           />
