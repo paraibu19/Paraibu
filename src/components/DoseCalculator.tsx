@@ -360,7 +360,7 @@ export default function DoseCalculator() {
           description: `Patient: ${formData.patientName || "Child"}\nMedication: ${item.medication}\nDose: ${item.dose}${item.unit}`,
           status: 'CONFIRMED',
           busyStatus: 'BUSY',
-          productId: 'Paraibu/PediatricDose',
+          productId: '-//Paraibu//Pediatric Dose Calculator//EN',
           start: [
             startDate.getFullYear(),
             startDate.getMonth() + 1,
@@ -373,7 +373,7 @@ export default function DoseCalculator() {
             {
               action: 'display',
               description: 'Event Reminder',
-              trigger: 'PT0M'
+              trigger: { minutes: 0, before: true }
             }
           ]
         };
