@@ -316,7 +316,7 @@ export default function DoseCalculator() {
       <section className="relative h-[400px] md:h-[500px] overflow-hidden">
         <div className="absolute inset-0">
           <img 
-            src="/poster.jpg" 
+            src="/Web_picture.jpg" 
             alt="Paraibu - Pediatric Dose Calculator"
             className="w-full h-full object-cover"
             onError={(e) => {
