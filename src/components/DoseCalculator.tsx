@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format, addHours } from 'date-fns';
-import { Calculator, User, FileText, AlertCircle, CheckCircle2, Loader2, ChevronRight, History, Scale, Droplets, Languages } from 'lucide-react';
+import { Calculator, User, FileText, AlertCircle, CheckCircle2, Loader2, ChevronRight, History, Scale, Droplets, Languages, BarChart3 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { MedicationType, ScheduleItem, FormData } from '@/src/types';
 import { motion, AnimatePresence } from 'motion/react';
 import * as arabicReshaper from 'arabic-reshaper';
+import { trackEvent } from '@/src/lib/firebase';
+import StatsDashboard from './StatsDashboard';
 
 const translations = {
   en: {
@@ -127,6 +129,7 @@ export default function DoseCalculator() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showStats, setShowStats] = useState(false);
 
   const calculateDoses = (weight: number) => {
     const Y = weight;
@@ -210,6 +213,16 @@ export default function DoseCalculator() {
     const schedule = generateSchedule(new Date(), pDose, iDose);
     setResults({ paracetamolDose: pDose, ibuprofenDose: iDose, schedule });
     setStatus(null);
+
+    // Track the calculation event
+    trackEvent('CALCULATION', {
+      language,
+      weight: formData.weight,
+      medications: [
+        `Paracetamol (${formData.paracetamolConcentration})`,
+        `Ibuprofen (${formData.ibuprofenConcentration})`
+      ]
+    });
   };
 
   const handleDownloadPDF = async () => {
@@ -291,6 +304,12 @@ export default function DoseCalculator() {
 
       doc.save(`Paraibu_${formData.patientName.replace(/\s+/g, '_')}_Report.pdf`);
       setStatus({ type: 'success', message: t.successPdf });
+
+      // Track PDF download event
+      trackEvent('PDF_DOWNLOAD', {
+        language,
+        patientName: formData.patientName.length > 0 ? "Provided" : "Anonymous"
+      });
     } catch (error) {
       console.error('PDF Generation Error:', error);
       setStatus({ type: 'error', message: t.errorPdf });
@@ -301,6 +320,10 @@ export default function DoseCalculator() {
 
   return (
     <div className={cn("min-h-screen bg-gray-50/50", isRTL && "font-sans")} dir={isRTL ? "rtl" : "ltr"}>
+      <AnimatePresence>
+        {showStats && <StatsDashboard onClose={() => setShowStats(false)} />}
+      </AnimatePresence>
+
       {/* Language Toggle */}
       <div className="fixed top-4 right-4 z-50">
         <button
@@ -587,11 +610,21 @@ export default function DoseCalculator() {
               ))}
             </div>
           </div>
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-4">
             <p className="text-gray-400 text-sm font-medium">{t.copyright}</p>
-            <p className="text-gray-400 text-sm font-medium">
-              {t.contact} <a href="mailto:paraibu19@gmail.com" className="text-blue-600 hover:underline">paraibu19@gmail.com</a>
-            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <p className="text-gray-400 text-sm font-medium">
+                {t.contact} <a href="mailto:paraibu19@gmail.com" className="text-blue-600 hover:underline">paraibu19@gmail.com</a>
+              </p>
+              <button 
+                onClick={() => setShowStats(true)}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-lg text-xs font-bold transition-colors"
+                title="View anonymous usage statistics"
+              >
+                <BarChart3 className="w-3.5 h-3.5" />
+                <span>Insights</span>
+              </button>
+            </div>
           </div>
         </footer>
       </main>

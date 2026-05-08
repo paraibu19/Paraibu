@@ -1,0 +1,37 @@
+{
+  "entities": {
+    "AnalyticsEvent": {
+      "title": "Analytics Event",
+      "description": "Log of user interactions on the site",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["CALCULATION", "PDF_DOWNLOAD"],
+          "description": "The type of event"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the event occurred"
+        },
+        "language": {
+          "type": "string",
+          "description": "User language at the time of event"
+        },
+        "medications": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Medications selected in the calculation (if applicable)"
+        }
+      },
+      "required": ["type", "timestamp"]
+    }
+  },
+  "firestore": {
+    "analytics_events": {
+      "schema": "AnalyticsEvent",
+      "description": "Collection for tracking app usage anonymously"
+    }
+  }
+}

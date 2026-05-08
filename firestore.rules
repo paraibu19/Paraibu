@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidAnalyticsEvent(data) {
+      return data.keys().hasAll(['type', 'timestamp']) &&
+             data.type in ['CALCULATION', 'PDF_DOWNLOAD'] &&
+             data.timestamp is timestamp &&
+             (data.keys().hasOnly(['type', 'timestamp', 'language', 'medications']));
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Analytics events - Allow creation by anyone (anonymous logs)
+    match /analytics_events/{eventId} {
+      allow create: if isValidAnalyticsEvent(request.resource.data);
+      allow read: if true; // Allowed for the dashboard view
+      allow update, delete: if false; 
+    }
+  }
+}
