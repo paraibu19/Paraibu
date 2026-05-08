@@ -316,17 +316,17 @@ export default function DoseCalculator() {
       <section className="relative h-[400px] md:h-[500px] overflow-hidden">
         <div className="absolute inset-0">
           <img 
-            src="https://drive.google.com/uc?export=view&id=1QOdrl2ij3z8TvuLdaUTOCxTuw3eNB8y2" 
+            src="https://lh3.googleusercontent.com/d/1cnl4jcjYn29ktJSwy_pXsVVCqisxw-vG" 
             alt="Pediatric dose timing guidance"
             className="w-full h-full object-cover"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               // Fallback to a high-quality pediatric care photo if Drive link fails
-              if (target.src !== "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=2000") {
-                target.src = "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=2000";
+              const fallbackUrl = "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=2000";
+              if (target.src !== fallbackUrl) {
+                target.src = fallbackUrl;
               }
             }}
-            referrerPolicy="no-referrer"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/40 to-transparent" />
         </div>
