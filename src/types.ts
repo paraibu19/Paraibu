@@ -24,4 +24,6 @@ export interface FormData {
   previousMedication: MedicationType;
   paracetamolConcentration: string;
   ibuprofenConcentration: string;
+  includeParacetamol?: boolean;
+  includeIbuprofen?: boolean;
 }

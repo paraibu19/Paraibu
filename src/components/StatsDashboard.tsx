@@ -7,11 +7,12 @@ import { format } from 'date-fns';
 
 interface AnalyticsEvent {
   id: string;
-  type: 'CALCULATION' | 'PDF_DOWNLOAD';
+  type: 'CALCULATION' | 'PDF_DOWNLOAD' | 'CALENDAR_EXPORT';
   timestamp: Timestamp;
   language?: string;
   weight?: number;
   medications?: string[];
+  patientName?: string;
 }
 
 export default function StatsDashboard({ onClose }: { onClose: () => void }) {
@@ -22,7 +23,11 @@ export default function StatsDashboard({ onClose }: { onClose: () => void }) {
   const [stats, setStats] = useState({
     totalCalcs: 0,
     totalPdfs: 0,
-    uniqueDays: 0
+    totalCalendars: 0,
+    uniqueDays: 0,
+    reach: 0, // Total interactions with provided patient names
+    pdfsEn: 0,
+    pdfsAr: 0
   });
 
   const fetchEvents = useCallback(async (isRefresh = false) => {
@@ -31,12 +36,20 @@ export default function StatsDashboard({ onClose }: { onClose: () => void }) {
     setError(null);
 
     try {
-      const q = query(collection(db, 'analytics_events'), orderBy('timestamp', 'desc'), limit(100));
+      const q = query(collection(db, 'analytics_events'), orderBy('timestamp', 'desc'), limit(500));
       const snapshot = await getDocs(q);
       
       if (snapshot.empty) {
         setEvents([]);
-        setStats({ totalCalcs: 0, totalPdfs: 0, uniqueDays: 0 });
+        setStats({ 
+          totalCalcs: 0, 
+          totalPdfs: 0, 
+          totalCalendars: 0,
+          uniqueDays: 0, 
+          reach: 0,
+          pdfsEn: 0,
+          pdfsAr: 0
+        });
         return;
       }
 
@@ -47,20 +60,32 @@ export default function StatsDashboard({ onClose }: { onClose: () => void }) {
 
       setEvents(fetchedEvents);
 
-      // Basic aggregation
+      // Aggregations
       const calcs = fetchedEvents.filter(e => e.type === 'CALCULATION').length;
-      const pdfs = fetchedEvents.filter(e => e.type === 'PDF_DOWNLOAD').length;
+      const pdfs = fetchedEvents.filter(e => e.type === 'PDF_DOWNLOAD');
+      const calendars = fetchedEvents.filter(e => e.type === 'CALENDAR_EXPORT').length;
+      
+      const pdfsEn = pdfs.filter(e => e.language === 'en').length;
+      const pdfsAr = pdfs.filter(e => e.language === 'ar').length;
+      const reachCount = fetchedEvents.filter(e => e.patientName === 'Provided').length;
+
+      const uniqueDaysSet = new Set(fetchedEvents.map(e => {
+        try {
+          return e.timestamp ? format(e.timestamp.toDate(), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+        } catch {
+          return format(new Date(), 'yyyy-MM-dd');
+        }
+      }));
       
       setStats({
         totalCalcs: calcs,
-        totalPdfs: pdfs,
-        uniqueDays: new Set(fetchedEvents.map(e => {
-          try {
-            return format(e.timestamp.toDate(), 'yyyy-MM-dd');
-          } catch {
-            return format(new Date(), 'yyyy-MM-dd');
-          }
-        })).size
+        totalPdfs: pdfs.length,
+        totalCalendars: calendars,
+        totalReports: pdfs.length + calendars, // Total document/export activity
+        uniqueDays: uniqueDaysSet.size,
+        reach: reachCount,
+        pdfsEn,
+        pdfsAr
       });
     } catch (err) {
       console.error('Error fetching stats:', err);
@@ -85,16 +110,17 @@ export default function StatsDashboard({ onClose }: { onClose: () => void }) {
       <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col"
+        className="bg-white w-full max-w-6xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col font-sans"
       >
+        {/* Header content ... */}
         <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center">
               <BarChart3 className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">Usage Insights</h2>
-              <p className="text-xs md:text-sm text-gray-500">Real-time anonymous activity</p>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">Insights Dashboard</h2>
+              <p className="text-xs md:text-sm text-gray-500 font-medium">Real-time platform activity metrics</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -115,11 +141,11 @@ export default function StatsDashboard({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-gray-50/30">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-64 space-y-4">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
-              <p className="text-sm font-medium text-gray-500">Loading statistics...</p>
+              <p className="text-sm font-medium text-gray-500">Syncing encrypted data...</p>
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center h-64 text-center space-y-4">
@@ -137,93 +163,89 @@ export default function StatsDashboard({ onClose }: { onClose: () => void }) {
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
                 <BarChart3 className="w-8 h-8 text-gray-300" />
               </div>
-              <p className="text-gray-500 font-medium">No activity recorded yet.</p>
+              <p className="text-gray-500 font-medium">No activity data found.</p>
             </div>
           ) : (
-            <div className="space-y-8">
-              {/* Stats Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100/50">
+            <div className="space-y-12">
+              {/* Primary Stats Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* CALCULATIONS */}
+                <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-4">
-                    <Calculator className="w-5 h-5 text-blue-600" />
-                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Calculations</span>
+                    <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                      <Calculator className="w-6 h-6" />
+                    </div>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</span>
                   </div>
-                  <div className="text-4xl font-black text-blue-900 leading-none">{stats.totalCalcs}</div>
-                  <p className="text-[10px] font-bold text-blue-400 mt-3 uppercase tracking-tighter">Recent activity</p>
+                  <div className="text-5xl font-black text-gray-900 tracking-tighter">{stats.totalCalcs}</div>
+                  <p className="text-xs font-black text-gray-500 mt-2 uppercase">Calculations</p>
                 </div>
 
-                <div className="bg-purple-50/50 p-6 rounded-3xl border border-purple-100/50">
+                {/* REPORTS */}
+                <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-4">
-                    <FileText className="w-5 h-5 text-purple-600" />
-                    <span className="text-[10px] font-bold text-purple-600 uppercase tracking-widest">Reports</span>
+                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
+                      <BarChart3 className="w-6 h-6" />
+                    </div>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Combined</span>
                   </div>
-                  <div className="text-4xl font-black text-purple-900 leading-none">{stats.totalPdfs}</div>
-                  <p className="text-[10px] font-bold text-purple-400 mt-3 uppercase tracking-tighter">PDF Generations</p>
+                  <div className="text-5xl font-black text-gray-900 tracking-tighter">{stats.totalReports}</div>
+                  <p className="text-xs font-black text-gray-500 mt-2 uppercase">Reports</p>
                 </div>
 
-                <div className="bg-emerald-50/50 p-6 rounded-3xl border border-emerald-100/50">
+                {/* PDF GENERATIONS */}
+                <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-4">
-                    <Calendar className="w-5 h-5 text-emerald-600" />
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Reach</span>
+                    <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Documents</span>
                   </div>
-                  <div className="text-4xl font-black text-emerald-900 leading-none">{stats.uniqueDays}</div>
-                  <p className="text-[10px] font-bold text-emerald-400 mt-3 uppercase tracking-tighter">Unique Days</p>
+                  <div className="text-5xl font-black text-gray-900 tracking-tighter">{stats.totalPdfs}</div>
+                  <p className="text-xs font-black text-gray-500 mt-2 uppercase">PDF Generations</p>
                 </div>
-              </div>
 
-              {/* Recent Activity Log */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between px-2">
-                  <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Showing last {events.length}</span>
+                {/* REACH */}
+                <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
+                      <Clock className="w-6 h-6" />
+                    </div>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Impact</span>
+                  </div>
+                  <div className="text-5xl font-black text-gray-900 tracking-tighter">{stats.reach}</div>
+                  <p className="text-xs font-black text-gray-500 mt-2 uppercase">Reach</p>
                 </div>
-                <div className="grid gap-3">
-                  {events.map((event) => (
-                    <motion.div
-                      layout
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      key={event.id}
-                      className="flex items-center p-4 bg-white rounded-2xl border border-gray-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all group"
-                    >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${
-                        event.type === 'CALCULATION' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'
-                      }`}>
-                        {event.type === 'CALCULATION' ? <Calculator className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
-                      </div>
-                      <div className="flex-1 px-4">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-bold text-gray-900">
-                            {event.type === 'CALCULATION' ? 'Dose Calculated' : 'PDF Exported'}
-                          </span>
-                          <span className="text-[9px] bg-gray-100 px-1.5 py-0.5 rounded-md uppercase font-black text-gray-500">
-                            {event.language || '??'}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-1.5 text-[11px] text-gray-400 font-medium">
-                          <Clock className="w-3 h-3" />
-                          <span>{event.timestamp ? format(event.timestamp.toDate(), 'MMM d, HH:mm') : 'Just now'}</span>
-                          {event.weight && (
-                            <>
-                              <span className="w-1 h-1 rounded-full bg-gray-200" />
-                              <span>{event.weight}kg</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <div className="hidden sm:flex space-x-1">
-                        {event.medications?.slice(0, 2).map((m, i) => (
-                          <div key={i} className="text-[9px] bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg text-gray-500 font-bold whitespace-nowrap">
-                            {m.split(' (')[0]}
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  ))}
+
+                {/* UNIQUE DAYS */}
+                <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-orange-50 text-orange-600 rounded-2xl">
+                      <Calendar className="w-6 h-6" />
+                    </div>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active</span>
+                  </div>
+                  <div className="text-5xl font-black text-gray-900 tracking-tighter">{stats.uniqueDays}</div>
+                  <p className="text-xs font-black text-gray-500 mt-2 uppercase">Unique Days</p>
+                </div>
+
+                {/* Recent Activity Mini Chart / Info */}
+                <div className="col-span-1 sm:col-span-2 lg:col-span-1 bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Export Analysis</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm font-bold text-gray-600">PDF Exported EN</span>
+                      <span className="text-lg font-black text-gray-900">{stats.pdfsEn}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm font-bold text-gray-600">PDF Exported AR</span>
+                      <span className="text-lg font-black text-gray-900">{stats.pdfsAr}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          )}
+          ) }
         </div>
       </motion.div>
     </motion.div>

@@ -55,6 +55,8 @@ const translations = {
     addToCalendar: "Add to Calendar (5 Days)",
     calendarSuccess: "Calendar file ready! Import it to your phone.",
     calendarError: "Failed to generate calendar file.",
+    paracetamolDoses: "Paracetamol Doses",
+    ibuprofenDoses: "Ibuprofen Doses",
   },
   ar: {
     title: "بارايبو - حساب الجرعة",
@@ -99,6 +101,8 @@ const translations = {
     addToCalendar: "إضافة للتقويم (5 أيام)",
     calendarSuccess: "ملف التقويم جاهز! قم باستيراده لهاتفك.",
     calendarError: "فشل إنشاء ملف التقويم.",
+    paracetamolDoses: "جرعات الباراسيتامول",
+    ibuprofenDoses: "جرعات الإيبوبروفين",
   }
 };
 
@@ -126,6 +130,8 @@ export default function DoseCalculator() {
     previousMedication: 'None',
     paracetamolConcentration: '120mg/5ml',
     ibuprofenConcentration: '100mg/5ml',
+    includeParacetamol: true,
+    includeIbuprofen: true,
   });
 
   const [results, setResults] = useState<{
@@ -343,9 +349,22 @@ export default function DoseCalculator() {
       const { pDose, iDose } = getSelectedDoses();
       // Generate 5-day schedule from CURRENT time
       const now = new Date();
-      const fullSchedule = generateSchedule(now, pDose, iDose, 5);
+      let fullSchedule = generateSchedule(now, pDose, iDose, 5);
       
-      console.log(`Generated ${fullSchedule.length} doses for 5 days`);
+      // Filter based on checkboxes
+      fullSchedule = fullSchedule.filter(item => {
+        if (item.medication === 'Paracetamol') return formData.includeParacetamol;
+        if (item.medication === 'Ibuprofen') return formData.includeIbuprofen;
+        return true;
+      });
+
+      console.log(`Generated ${fullSchedule.length} filtered doses for 5 days`);
+
+      if (fullSchedule.length === 0) {
+        setStatus({ type: 'error', message: language === 'en' ? 'Please select at least one medication for calendar.' : 'يرجى اختيار دواء واحد على الأقل للتقويم.' });
+        setIsSubmitting(false);
+        return;
+      }
 
       if (!ics || typeof ics.createEvents !== 'function') {
         throw new Error('ICS library not loaded correctly');
@@ -373,7 +392,7 @@ export default function DoseCalculator() {
             {
               action: 'display',
               description: 'Event Reminder',
-              trigger: { minutes: 0, before: true }
+              trigger: { minutes: 0, before: false }
             }
           ]
         };
@@ -625,23 +644,49 @@ export default function DoseCalculator() {
                         <CheckCircle2 className={cn("w-6 h-6 text-green-500", isRTL ? "ml-3" : "mr-3")} />
                         {t.calculatedDoses}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          onClick={handleDownloadCalendar}
-                          disabled={isSubmitting}
-                          className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-100 transition-all disabled:opacity-50 border border-blue-100"
-                        >
-                          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarDays className="w-4 h-4" />}
-                          <span>{t.addToCalendar}</span>
-                        </button>
-                        <button
-                          onClick={handleDownloadPDF}
-                          disabled={isSubmitting}
-                          className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all disabled:opacity-50"
-                        >
-                          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                          <span>{t.downloadPdf}</span>
-                        </button>
+                      <div className="flex flex-col gap-4">
+                        <div className="flex flex-wrap items-center gap-4 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                          <label className="flex items-center space-x-2 cursor-pointer group">
+                            <input
+                              type="checkbox"
+                              checked={formData.includeParacetamol}
+                              onChange={(e) => setFormData({ ...formData, includeParacetamol: e.target.checked })}
+                              className="w-5 h-5 rounded-md border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                            />
+                            <span className={cn("text-xs font-bold text-gray-700 group-hover:text-blue-600 transition-colors", isRTL && "mr-2")}>
+                              {t.paracetamolDoses}
+                            </span>
+                          </label>
+                          <label className="flex items-center space-x-2 cursor-pointer group">
+                            <input
+                              type="checkbox"
+                              checked={formData.includeIbuprofen}
+                              onChange={(e) => setFormData({ ...formData, includeIbuprofen: e.target.checked })}
+                              className="w-5 h-5 rounded-md border-gray-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                            />
+                            <span className={cn("text-xs font-bold text-gray-700 group-hover:text-orange-600 transition-colors", isRTL && "mr-2")}>
+                              {t.ibuprofenDoses}
+                            </span>
+                          </label>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={handleDownloadCalendar}
+                            disabled={isSubmitting || (!formData.includeParacetamol && !formData.includeIbuprofen)}
+                            className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-100 transition-all disabled:opacity-50 border border-blue-100"
+                          >
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarDays className="w-4 h-4" />}
+                            <span>{t.addToCalendar}</span>
+                          </button>
+                          <button
+                            onClick={handleDownloadPDF}
+                            disabled={isSubmitting}
+                            className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all disabled:opacity-50"
+                          >
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                            <span>{t.downloadPdf}</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
 
