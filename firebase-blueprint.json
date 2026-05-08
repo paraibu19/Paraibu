@@ -7,7 +7,7 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["CALCULATION", "PDF_DOWNLOAD"],
+          "enum": ["CALCULATION", "PDF_DOWNLOAD", "CALENDAR_EXPORT"],
           "description": "The type of event"
         },
         "timestamp": {

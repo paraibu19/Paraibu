@@ -40,7 +40,7 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   console.error('Firestore Error Detailed: ', JSON.stringify(errInfo));
 }
 
-export async function trackEvent(type: 'CALCULATION' | 'PDF_DOWNLOAD', metadata: any = {}) {
+export async function trackEvent(type: 'CALCULATION' | 'PDF_DOWNLOAD' | 'CALENDAR_EXPORT', metadata: any = {}) {
   const path = 'analytics_events';
   try {
     const analyticsRef = collection(db, path);

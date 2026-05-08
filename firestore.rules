@@ -14,7 +14,7 @@ service cloud.firestore {
       let allowedKeys = ['type', 'timestamp', 'language', 'medications', 'weight', 'patientName'];
       return data.keys().hasAll(['type', 'timestamp']) &&
              data.keys().size() <= 6 &&
-             data.type in ['CALCULATION', 'PDF_DOWNLOAD'] &&
+             data.type in ['CALCULATION', 'PDF_DOWNLOAD', 'CALENDAR_EXPORT'] &&
              data.timestamp is timestamp;
     }
 

@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { format, addHours } from 'date-fns';
-import { Calculator, User, FileText, AlertCircle, CheckCircle2, Loader2, ChevronRight, History, Scale, Droplets, Languages, BarChart3 } from 'lucide-react';
+import { format, addHours, addDays } from 'date-fns';
+import { Calculator, User, FileText, AlertCircle, CheckCircle2, Loader2, ChevronRight, History, Scale, Droplets, Languages, BarChart3, CalendarDays } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { MedicationType, ScheduleItem, FormData } from '@/src/types';
 import { motion, AnimatePresence } from 'motion/react';
 import * as arabicReshaper from 'arabic-reshaper';
 import { trackEvent } from '@/src/lib/firebase';
 import StatsDashboard from './StatsDashboard';
+import * as ics from 'ics';
 
 const translations = {
   en: {
@@ -50,7 +51,10 @@ const translations = {
     ml: "mL",
     unit: "mL",
     heroTitle: "Safe Dosing for Every Child",
-    heroSubtitle: "Accurate pediatric medication calculations you can trust."
+    heroSubtitle: "Accurate pediatric medication calculations you can trust.",
+    addToCalendar: "Add to Calendar (5 Days)",
+    calendarSuccess: "Calendar file ready! Import it to your phone.",
+    calendarError: "Failed to generate calendar file.",
   },
   ar: {
     title: "بارايبو - حساب الجرعة",
@@ -91,7 +95,10 @@ const translations = {
     ml: "مل",
     unit: "مل",
     heroTitle: "جرعات آمنة لكل طفل",
-    heroSubtitle: "حسابات دقيقة لأدوية الأطفال يمكنك الوثوق بها."
+    heroSubtitle: "حسابات دقيقة لأدوية الأطفال يمكنك الوثوق بها.",
+    addToCalendar: "إضافة للتقويم (5 أيام)",
+    calendarSuccess: "ملف التقويم جاهز! قم باستيراده لهاتفك.",
+    calendarError: "فشل إنشاء ملف التقويم.",
   }
 };
 
@@ -168,43 +175,51 @@ export default function DoseCalculator() {
     return { pDose, iDose };
   };
 
-  const generateSchedule = (now: Date, pDose: number, iDose: number): ScheduleItem[] => {
+  const generateSchedule = (now: Date, pDose: number, iDose: number, days: number = 1): ScheduleItem[] => {
     const schedule: ScheduleItem[] = [];
     const P = formData.previousMedication;
-    const T = now;
+    
+    // We'll generate schedule for specified number of days
+    // The pattern depends on the starting medication
+    for (let day = 0; day < days; day++) {
+      const dayStart = addDays(now, day);
+      const T = day === 0 ? now : new Date(dayStart.setHours(now.getHours(), now.getMinutes(), 0, 0));
 
-    if (P === 'Ibuprofen') {
-      schedule.push({ time: addHours(T, 2), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 6), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 10), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 8), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 14), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 18), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 16), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 22), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 24), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
-    } else if (P === 'Paracetamol') {
-      schedule.push({ time: addHours(T, 2), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 4), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 8), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 10), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 12), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 16), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 18), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 20), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 24), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-    } else {
-      // Start immediately with Paracetamol as default if None
-      schedule.push({ time: T, medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 4), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 8), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 12), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 6), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 12), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
-      schedule.push({ time: addHours(T, 18), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
+      if (P === 'Ibuprofen') {
+        schedule.push({ time: addHours(T, 2), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 6), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 10), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 8), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 14), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 18), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 16), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 22), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 24), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
+      } else if (P === 'Paracetamol') {
+        schedule.push({ time: addHours(T, 2), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 4), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 8), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 10), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 12), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 16), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 18), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 20), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 24), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+      } else {
+        // Start immediately with Paracetamol as default if None
+        schedule.push({ time: T, medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 4), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 8), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 12), medication: 'Paracetamol', dose: pDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 6), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 12), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
+        schedule.push({ time: addHours(T, 18), medication: 'Ibuprofen', dose: iDose, unit: 'mL' });
+      }
     }
 
-    return schedule.sort((a, b) => a.time.getTime() - b.time.getTime());
+    return schedule
+      .filter(item => item.time >= now) // Ensure we don't have past events if it's day 1 etc
+      .sort((a, b) => a.time.getTime() - b.time.getTime());
   };
 
   const handleCalculate = (e: React.FormEvent) => {
@@ -313,6 +328,114 @@ export default function DoseCalculator() {
     } catch (error) {
       console.error('PDF Generation Error:', error);
       setStatus({ type: 'error', message: t.errorPdf });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDownloadCalendar = () => {
+    if (!results) return;
+    setIsSubmitting(true);
+    setStatus(null);
+    console.log('Starting calendar generation for 5 days...');
+
+    try {
+      const { pDose, iDose } = getSelectedDoses();
+      // Generate 5-day schedule from CURRENT time
+      const now = new Date();
+      const fullSchedule = generateSchedule(now, pDose, iDose, 5);
+      
+      console.log(`Generated ${fullSchedule.length} doses for 5 days`);
+
+      if (!ics || typeof ics.createEvents !== 'function') {
+        throw new Error('ICS library not loaded correctly');
+      }
+
+      const calendarEvents: ics.EventAttributes[] = fullSchedule.map(item => {
+        const startDate = item.time;
+        const alarmTitle = `${item.medication}: ${item.dose}${item.unit}`;
+        
+        return {
+          title: `Medicine: ${item.medication} (${item.dose}${item.unit})`,
+          description: `Patient: ${formData.patientName || "Child"}\nMedication: ${item.medication}\nDose: ${item.dose}${item.unit}`,
+          status: 'CONFIRMED',
+          busyStatus: 'BUSY',
+          productId: 'Paraibu/PediatricDose',
+          start: [
+            startDate.getFullYear(),
+            startDate.getMonth() + 1,
+            startDate.getDate(),
+            startDate.getHours(),
+            startDate.getMinutes()
+          ],
+          duration: { minutes: 15 },
+          alarms: [
+            {
+              action: 'display',
+              description: 'Event Reminder',
+              trigger: 'PT0M'
+            }
+          ]
+        };
+      });
+
+      if (!ics || typeof ics.createEvents !== 'function') {
+        throw new Error('ICS library not initialized correctly');
+      }
+
+      console.log('Building calendar events for:', calendarEvents.length, 'items');
+
+      ics.createEvents(calendarEvents, (error, value) => {
+        if (error) {
+          console.error('ICS Generation Error:', error);
+          setStatus({ type: 'error', message: t.calendarError });
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (!value) {
+          console.error('ICS generation returned empty value');
+          setStatus({ type: 'error', message: t.calendarError });
+          setIsSubmitting(false);
+          return;
+        }
+
+        try {
+          const patientSafeName = (formData.patientName || 'Child').trim().substring(0, 20).replace(/[^a-z0-9]/gi, '_');
+          const fileName = `Paraibu_Reminders_${patientSafeName}.ics`;
+          
+          const blob = new Blob([value], { type: 'text/calendar;charset=utf-8' });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', fileName);
+          document.body.appendChild(link);
+          link.click();
+          
+          // Cleanup
+          setTimeout(() => {
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+          }, 250);
+
+          console.log('Calendar file download triggered');
+          setStatus({ type: 'success', message: t.calendarSuccess });
+
+          trackEvent('CALENDAR_EXPORT', {
+            language,
+            patientName: formData.patientName.length > 0 ? "Provided" : "Anonymous",
+            eventCount: calendarEvents.length
+          });
+        } catch (e) {
+          console.error('Download Logic Error:', e);
+          setStatus({ type: 'error', message: t.calendarError });
+        } finally {
+          setIsSubmitting(false);
+        }
+      });
+    } catch (error) {
+      console.error('Calendar Process Error:', error);
+      setStatus({ type: 'error', message: t.calendarError });
     } finally {
       setIsSubmitting(false);
     }
@@ -497,19 +620,29 @@ export default function DoseCalculator() {
                   <div 
                     className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 p-8 space-y-6"
                   >
-                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                    <div className={cn("flex flex-col sm:flex-row items-center gap-4 justify-between", isRTL && "sm:flex-row-reverse")}>
                       <h3 className="text-xl font-bold text-gray-900 flex items-center">
                         <CheckCircle2 className={cn("w-6 h-6 text-green-500", isRTL ? "ml-3" : "mr-3")} />
                         {t.calculatedDoses}
                       </h3>
-                      <button
-                        onClick={handleDownloadPDF}
-                        disabled={isSubmitting}
-                        className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all disabled:opacity-50"
-                      >
-                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                        <span>{t.downloadPdf}</span>
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={handleDownloadCalendar}
+                          disabled={isSubmitting}
+                          className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-100 transition-all disabled:opacity-50 border border-blue-100"
+                        >
+                          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarDays className="w-4 h-4" />}
+                          <span>{t.addToCalendar}</span>
+                        </button>
+                        <button
+                          onClick={handleDownloadPDF}
+                          disabled={isSubmitting}
+                          className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all disabled:opacity-50"
+                        >
+                          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                          <span>{t.downloadPdf}</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
