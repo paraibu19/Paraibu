@@ -8,17 +8,49 @@ export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId)
 export const auth = getAuth();
 
 // Track event helper
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error Detailed: ', JSON.stringify(errInfo));
+}
+
 export async function trackEvent(type: 'CALCULATION' | 'PDF_DOWNLOAD', metadata: any = {}) {
+  const path = 'analytics_events';
   try {
-    const analyticsRef = collection(db, 'analytics_events');
+    const analyticsRef = collection(db, path);
     await addDoc(analyticsRef, {
       type,
       timestamp: serverTimestamp(),
       ...metadata
     });
   } catch (error) {
-    // If it's a permission error, it might be expected if the user is spamming or if rules are strict
-    console.error('Failed to track event:', error);
+    handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
 

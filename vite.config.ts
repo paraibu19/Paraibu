@@ -6,7 +6,7 @@ import {defineConfig, loadEnv} from 'vite';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base: mode === 'production' ? '/Paraibu/' : '/', // Optimized for GitHub Pages sub-path in production
+    base: './', // More robust relative path for GitHub Pages or any hosting environment
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),

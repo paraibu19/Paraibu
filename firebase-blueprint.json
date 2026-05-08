@@ -19,6 +19,14 @@
           "type": "string",
           "description": "User language at the time of event"
         },
+        "weight": {
+          "type": "number",
+          "description": "Patient weight in KG"
+        },
+        "patientName": {
+          "type": "string",
+          "description": "Anonymized patient name status"
+        },
         "medications": {
           "type": "array",
           "items": { "type": "string" },

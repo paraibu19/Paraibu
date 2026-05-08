@@ -11,10 +11,11 @@ service cloud.firestore {
     }
 
     function isValidAnalyticsEvent(data) {
+      let allowedKeys = ['type', 'timestamp', 'language', 'medications', 'weight', 'patientName'];
       return data.keys().hasAll(['type', 'timestamp']) &&
+             data.keys().size() <= 6 &&
              data.type in ['CALCULATION', 'PDF_DOWNLOAD'] &&
-             data.timestamp is timestamp &&
-             (data.keys().hasOnly(['type', 'timestamp', 'language', 'medications']));
+             data.timestamp is timestamp;
     }
 
     // Default deny
@@ -22,10 +23,10 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Analytics events - Allow creation by anyone (anonymous logs)
+    // Analytics events
     match /analytics_events/{eventId} {
       allow create: if isValidAnalyticsEvent(request.resource.data);
-      allow read: if true; // Allowed for the dashboard view
+      allow read: if true; // Publicly readable for the anonymous dashboard
       allow update, delete: if false; 
     }
   }
