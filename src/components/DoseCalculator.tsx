@@ -316,14 +316,14 @@ export default function DoseCalculator() {
       <section className="relative h-[400px] md:h-[500px] overflow-hidden">
         <div className="absolute inset-0">
           <img 
-            src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=2000" 
-            alt="Pediatric liquid medication care"
+            src="https://drive.google.com/uc?export=view&id=1QOdrl2ij3z8TvuLdaUTOCxTuw3eNB8y2" 
+            alt="Pediatric dose timing guidance"
             className="w-full h-full object-cover"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              // Secondary fallback if Unsplash fails
-              if (target.src !== "/Web_picture.jpg") {
-                target.src = "/Web_picture.jpg";
+              // Fallback to a high-quality pediatric care photo if Drive link fails
+              if (target.src !== "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=2000") {
+                target.src = "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=2000";
               }
             }}
             referrerPolicy="no-referrer"
