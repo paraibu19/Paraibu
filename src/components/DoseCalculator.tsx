@@ -317,10 +317,10 @@ export default function DoseCalculator() {
         <div className="absolute inset-0">
           <img 
             src="/poster.jpg" 
-            alt="Paraibu Hero"
+            alt="Paraibu - Pediatric Dose Calculator"
             className="w-full h-full object-cover"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1631217818242-5033523c5735?auto=format&fit=crop&q=80&w=2000";
+              (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1551076805-e1869033e561?q=80&w=2000&auto=format&fit=crop";
             }}
             referrerPolicy="no-referrer"
           />
