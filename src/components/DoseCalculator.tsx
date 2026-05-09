@@ -33,7 +33,7 @@ const translations = {
     safety2: "Do not exceed maximum daily doses",
     safety3: "Do not give Paracetamol more frequently than every 4 hours",
     safety4: "Do not give Ibuprofen more frequently than every 6 hours",
-    copyright: "© 2019 Paraibu Dose Calculation. All rights reserved.",
+    copyright: "Paraibu Dose Calculation",
     contact: "Contact us:",
     successPdf: "PDF downloaded successfully!",
     errorPdf: "Failed to generate PDF. Please try again.",
@@ -79,7 +79,7 @@ const translations = {
     safety2: "لا تتجاوز الجرعات اليومية القصوى",
     safety3: "لا تعطي الباراسيتامول أكثر من مرة كل 4 ساعات",
     safety4: "لا تعطي الإيبوبروفين أكثر من مرة كل 6 ساعات",
-    copyright: "© 2019 بارايبو لحساب الجرعة. جميع الحقوق محفوظة.",
+    copyright: "بارايبو لحساب الجرعة",
     contact: "اتصل بنا:",
     successPdf: "تم تحميل ملف PDF بنجاح!",
     errorPdf: "فشل إنشاء ملف PDF. يرجى المحاولة مرة أخرى.",
@@ -513,7 +513,7 @@ export default function DoseCalculator() {
               <Calculator className="w-3 h-3" />
               <span>{t.title}</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-tight">
+            <h1 className="text-4xl md:text-6xl font-black font-display text-white tracking-tight leading-tight">
               {t.heroTitle}
             </h1>
             <p className="text-lg md:text-xl text-gray-200 font-medium max-w-lg">
@@ -847,20 +847,50 @@ export default function DoseCalculator() {
               ))}
             </div>
           </div>
-          <div className="text-center space-y-4">
-            <p className="text-gray-400 text-sm font-medium">{t.copyright}</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <p className="text-gray-400 text-sm font-medium">
-                {t.contact} <a href="mailto:paraibu19@gmail.com" className="text-blue-600 hover:underline">paraibu19@gmail.com</a>
+          <div className="text-center space-y-8 pt-8 border-t border-gray-100">
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <Calculator className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-3xl font-display font-black uppercase tracking-tighter text-gray-900">
+                  Paraibu
+                </span>
+              </div>
+              <p className="text-gray-400 text-sm font-medium max-w-md mx-auto italic">
+                {t.subtitle}
               </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-y-6 sm:gap-x-12 pt-4">
+              <div className="flex items-center gap-3 px-6 py-3 bg-white rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
+                <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                  <Languages className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t.contact}</p>
+                  <a href="mailto:paraibu19@gmail.com" className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors">
+                    paraibu19@gmail.com
+                  </a>
+                </div>
+              </div>
+              
               <button 
                 onClick={() => setShowStats(true)}
-                className="flex items-center space-x-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-lg text-xs font-bold transition-colors"
-                title="View anonymous usage statistics"
+                className="group flex items-center gap-3 px-6 py-3 bg-gray-900 text-white rounded-2xl font-bold text-sm transition-all hover:bg-gray-800 hover:scale-[1.02] active:scale-95 shadow-xl shadow-gray-200"
               >
-                <BarChart3 className="w-3.5 h-3.5" />
-                <span>Insights</span>
+                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center transition-colors group-hover:bg-white/20">
+                  <BarChart3 className="w-4 h-4" />
+                </div>
+                <span>{isRTL ? "إحصائيات المنصة" : "Platform Insights"}</span>
               </button>
+            </div>
+            
+            <div className="pt-8 flex flex-col items-center gap-2">
+               <div className="h-px w-24 bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+               <p className="text-gray-300 text-[10px] uppercase tracking-[0.4em] font-black py-2">
+                 {t.copyright}
+               </p>
             </div>
           </div>
         </footer>
