@@ -3,13 +3,12 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format, addHours, addDays } from 'date-fns';
 import { Calculator, User, FileText, AlertCircle, CheckCircle2, Loader2, ChevronRight, History, Scale, Droplets, Languages, BarChart3, CalendarDays } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
-import { MedicationType, ScheduleItem, FormData } from '@/src/types';
+import { cn } from '../lib/utils';
+import { MedicationType, ScheduleItem, FormData } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import * as arabicReshaper from 'arabic-reshaper';
-import { trackEvent } from '@/src/lib/firebase';
+import { trackEvent } from '../lib/firebase';
 import StatsDashboard from './StatsDashboard';
-import * as ics from 'ics';
+import { createEvents, EventAttributes } from 'ics';
 
 const translations = {
   en: {
@@ -366,11 +365,11 @@ export default function DoseCalculator() {
         return;
       }
 
-      if (!ics || typeof ics.createEvents !== 'function') {
+      if (typeof createEvents !== 'function') {
         throw new Error('ICS library not loaded correctly');
       }
 
-      const calendarEvents: ics.EventAttributes[] = fullSchedule.map(item => {
+      const calendarEvents: EventAttributes[] = fullSchedule.map(item => {
         const startDate = item.time;
         const alarmTitle = `${item.medication}: ${item.dose}${item.unit}`;
         
@@ -398,13 +397,13 @@ export default function DoseCalculator() {
         };
       });
 
-      if (!ics || typeof ics.createEvents !== 'function') {
+      if (typeof createEvents !== 'function') {
         throw new Error('ICS library not initialized correctly');
       }
 
       console.log('Building calendar events for:', calendarEvents.length, 'items');
 
-      ics.createEvents(calendarEvents, (error, value) => {
+      createEvents(calendarEvents, (error, value) => {
         if (error) {
           console.error('ICS Generation Error:', error);
           setStatus({ type: 'error', message: t.calendarError });
@@ -675,7 +674,7 @@ export default function DoseCalculator() {
                         <div className="flex flex-col gap-3">
                           <div className="flex items-center justify-between">
                             <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                              {language === 'en' ? "Calendar Sync Options" : "خيارات الـمزامنة مع التقويم"}
+                              {language === 'en' ? "Select Medication Calendar" : "اختر أدوية التقويم"}
                             </h4>
                             <span className="px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-black rounded-full uppercase">5 Days schedule</span>
                           </div>
