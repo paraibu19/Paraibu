@@ -8,8 +8,7 @@ import { MedicationType, ScheduleItem, FormData } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { trackEvent } from '../lib/firebase';
 import StatsDashboard from './StatsDashboard';
-import * as ics from 'ics';
-import arabicReshaper from 'arabic-reshaper';
+import { createEvents, EventAttributes } from 'ics';
 
 const translations = {
   en: {
@@ -366,11 +365,11 @@ export default function DoseCalculator() {
         return;
       }
 
-      if (typeof ics.createEvents !== 'function') {
+      if (typeof createEvents !== 'function') {
         throw new Error('ICS library not loaded correctly');
       }
 
-      const calendarEvents: ics.EventAttributes[] = fullSchedule.map(item => {
+      const calendarEvents: EventAttributes[] = fullSchedule.map(item => {
         const startDate = item.time;
         const alarmTitle = `${item.medication}: ${item.dose}${item.unit}`;
         
@@ -398,13 +397,13 @@ export default function DoseCalculator() {
         };
       });
 
-      if (typeof ics.createEvents !== 'function') {
+      if (typeof createEvents !== 'function') {
         throw new Error('ICS library not initialized correctly');
       }
 
       console.log('Building calendar events for:', calendarEvents.length, 'items');
 
-      ics.createEvents(calendarEvents, (error, value) => {
+      createEvents(calendarEvents, (error, value) => {
         if (error) {
           console.error('ICS Generation Error:', error);
           setStatus({ type: 'error', message: t.calendarError });
