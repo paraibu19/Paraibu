@@ -36,7 +36,7 @@ export default function StatsDashboard({ onClose }: { onClose: () => void }) {
     setError(null);
 
     try {
-      const q = query(collection(db, 'analytics_events'), limit(500));
+      const q = query(collection(db, 'analytics_events'), orderBy('timestamp', 'desc'), limit(500));
       const snapshot = await getDocs(q);
       
       if (snapshot.empty) {
@@ -57,13 +57,6 @@ export default function StatsDashboard({ onClose }: { onClose: () => void }) {
         id: doc.id,
         ...doc.data()
       })) as AnalyticsEvent[];
-
-      // Sort by timestamp desc in memory to avoid mandatory Firestore indexing during initial setup
-      fetchedEvents.sort((a, b) => {
-        const timeA = a.timestamp?.toMillis?.() || 0;
-        const timeB = b.timestamp?.toMillis?.() || 0;
-        return timeB - timeA;
-      });
 
       setEvents(fetchedEvents);
 
@@ -170,8 +163,7 @@ export default function StatsDashboard({ onClose }: { onClose: () => void }) {
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
                 <BarChart3 className="w-8 h-8 text-gray-300" />
               </div>
-              <p className="text-gray-500 font-medium italic">No activity recorded yet.</p>
-              <p className="text-xs text-gray-400 max-w-xs">Data will appear here once users start performing calculations or exporting reports.</p>
+              <p className="text-gray-500 font-medium">No activity data found.</p>
             </div>
           ) : (
             <div className="space-y-12">
