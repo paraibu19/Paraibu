@@ -1,5 +1,5 @@
 {
   "name": "Paraibu - Pediatric Dose Calculator",
-  "description": "Professional pediatric medication dose calculation assistant with PDF reports and email integration.",
+  "description": "Accurate pediatric medication dose calculator with PDF reports, smart calendar reminders (.ics), and an insights dashboard for tracking activity.",
   "requestFramePermissions": []
 }
