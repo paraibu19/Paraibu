@@ -17,18 +17,32 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
+        includeAssets: ['favicon.ico', 'icon.svg'],
         manifest: {
           name: 'Paraibu - Pediatric Dose Calculator',
           short_name: 'Paraibu',
           description: 'Professional pediatric medication dose calculation assistant',
           theme_color: '#4dabf7',
+          background_color: '#f9fafb',
+          display: 'standalone',
           icons: [
             {
-              src: 'icon.svg',
+              src: '/icon.svg',
+              sizes: '192x192',
+              type: 'image/svg+xml',
+              purpose: 'any'
+            },
+            {
+              src: '/icon.svg',
               sizes: '512x512',
               type: 'image/svg+xml',
-              purpose: 'any maskable'
+              purpose: 'any'
+            },
+            {
+              src: '/icon.svg',
+              sizes: '512x512',
+              type: 'image/svg+xml',
+              purpose: 'maskable'
             }
           ]
         }
