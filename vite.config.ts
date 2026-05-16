@@ -17,6 +17,7 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
+        injectRegister: 'auto',
         includeAssets: ['icon.svg'],
         manifest: {
           name: 'Paraibu - Pediatric Dose Calculator',
@@ -25,6 +26,8 @@ export default defineConfig(({mode}) => {
           theme_color: '#4dabf7',
           background_color: '#f9fafb',
           display: 'standalone',
+          start_url: './',
+          scope: './',
           icons: [
             {
               src: 'icon.svg',
@@ -45,6 +48,10 @@ export default defineConfig(({mode}) => {
               purpose: 'maskable'
             }
           ]
+        },
+        workbox: {
+          navigateFallback: 'index.html',
+          globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
         }
       })
     ],
