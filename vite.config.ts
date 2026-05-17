@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base: '/',
+    base: './',
     plugins: [
       react(), 
       tailwindcss(),
@@ -26,23 +26,23 @@ export default defineConfig(({mode}) => {
           theme_color: '#4dabf7',
           background_color: '#f9fafb',
           display: 'standalone',
-          start_url: '/',
-          scope: '/',
+          start_url: '.',
+          scope: '.',
           icons: [
             {
-              src: '/icon.svg',
+              src: 'icon.svg',
               sizes: '192x192',
               type: 'image/svg+xml',
               purpose: 'any'
             },
             {
-              src: '/icon.svg',
+              src: 'icon.svg',
               sizes: '512x512',
               type: 'image/svg+xml',
               purpose: 'any'
             },
             {
-              src: '/icon.svg',
+              src: 'icon.svg',
               sizes: '512x512',
               type: 'image/svg+xml',
               purpose: 'maskable'
