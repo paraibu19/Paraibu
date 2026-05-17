@@ -59,7 +59,7 @@ const InstallGuide: React.FC = () => {
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 leading-tight">
-                Install Paraibu App
+                Add Paraibu App to Home Screen
               </h3>
               <p className="text-sm text-gray-500 mt-1">
                 Add to your home screen for quick access.
