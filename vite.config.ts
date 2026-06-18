@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { defineConfig, loadEnv } from 'vite';
-import { VitePWA } from 'vite-plugin-pwa';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,47 +13,7 @@ export default defineConfig(({mode}) => {
     base: '/',
     plugins: [
       react(), 
-      tailwindcss(),
-      VitePWA({
-        registerType: 'autoUpdate',
-        injectRegister: 'auto',
-        includeAssets: ['icon.svg'],
-        manifest: {
-          name: 'Paraibu - Pediatric Dose Calculator',
-          short_name: 'Paraibu',
-          description: 'Professional pediatric medication dose calculation assistant',
-          theme_color: '#4dabf7',
-          background_color: '#f9fafb',
-          display: 'standalone',
-          start_url: '/',
-          scope: '/',
-          icons: [
-            {
-              src: '/icon.svg',
-              sizes: '192x192',
-              type: 'image/svg+xml',
-              purpose: 'any'
-            },
-            {
-              src: '/icon.svg',
-              sizes: '512x512',
-              type: 'image/svg+xml',
-              purpose: 'any'
-            },
-            {
-              src: '/icon.svg',
-              sizes: '512x512',
-              type: 'image/svg+xml',
-              purpose: 'maskable'
-            }
-          ]
-        },
-        workbox: {
-          cleanupOutdatedCaches: true,
-          navigateFallback: 'index.html',
-          globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
-        }
-      })
+      tailwindcss()
     ],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),

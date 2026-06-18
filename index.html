@@ -12,54 +12,57 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <script>
-      // Self-healing recovery mechanism to resolve frozen/blank screens caused by outdated or broken PWA service worker caches
+      // Proactive self-healing recovery: Unregister legacy/stale Service Workers and purge caches
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          if (registrations && registrations.length > 0) {
+            console.log('Stale service workers detected (' + registrations.length + '). Purging to download fresh application resources...');
+            var cacheClearPromise = Promise.resolve();
+            if ('caches' in window) {
+              cacheClearPromise = caches.keys().then(function(keys) {
+                return Promise.all(keys.map(function(key) {
+                  return caches.delete(key);
+                }));
+              });
+            }
+            cacheClearPromise.then(function() {
+              var unregisterPromises = [];
+              for (var i = 0; i < registrations.length; i++) {
+                unregisterPromises.push(registrations[i].unregister());
+              }
+              return Promise.all(unregisterPromises);
+            }).then(function() {
+              console.log('Purge complete. Performing hot reload...');
+              window.location.reload(true);
+            }).catch(function(err) {
+              console.error('Purge error:', err);
+              window.location.reload(true);
+            });
+          }
+        });
+      }
+
+      // Standby fallback: reload of the page if physical assets (CSS/JS) fail to load
       window.addEventListener('error', function(e) {
         if (e.target && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
-          console.warn('Failed to load asset:', e.target.src || e.target.href);
-          recoverFromCacheIssues();
-        }
-      }, true);
-
-      window.addEventListener('unhandledrejection', function(e) {
-        if (e.reason && (e.reason.message || String(e.reason)).indexOf('Failed to fetch dynamically imported module') > -1) {
-          console.warn('Failed dynamic import rejection. Attempting recovery...');
-          recoverFromCacheIssues();
-        }
-      });
-
-      function recoverFromCacheIssues() {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            if (registrations.length > 0) {
-              console.log('Unregistering ' + registrations.length + ' service workers to reload fresh resources...');
-              var unregisteredCount = 0;
-              for (var i = 0; i < registrations.length; i++) {
-                registrations[i].unregister().then(function() {
-                  unregisteredCount++;
-                  if (unregisteredCount === registrations.length) {
-                    window.location.reload(true);
-                  }
-                });
-              }
-              // Fallback reload if promise chain hangs
-              setTimeout(function() {
-                window.location.reload(true);
-              }, 1000);
-            } else {
+          console.warn('Physical asset failed to load. Performing fallback reload:', e.target.src || e.target.href);
+          try {
+            var lastReload = sessionStorage.getItem('last_err_reload');
+            var now = Date.now();
+            if (!lastReload || (now - parseInt(lastReload, 10)) > 8000) {
+              sessionStorage.setItem('last_err_reload', String(now));
               window.location.reload(true);
             }
-          }).catch(function() {
+          } catch(err) {
             window.location.reload(true);
-          });
-        } else {
-          window.location.reload(true);
+          }
         }
-      }
+      }, true);
     </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx" onerror="recoverFromCacheIssues()"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
 
