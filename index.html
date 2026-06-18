@@ -11,10 +11,55 @@
     <meta name="apple-mobile-web-app-title" content="Paraibu" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <script>
+      // Self-healing recovery mechanism to resolve frozen/blank screens caused by outdated or broken PWA service worker caches
+      window.addEventListener('error', function(e) {
+        if (e.target && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
+          console.warn('Failed to load asset:', e.target.src || e.target.href);
+          recoverFromCacheIssues();
+        }
+      }, true);
+
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && (e.reason.message || String(e.reason)).indexOf('Failed to fetch dynamically imported module') > -1) {
+          console.warn('Failed dynamic import rejection. Attempting recovery...');
+          recoverFromCacheIssues();
+        }
+      });
+
+      function recoverFromCacheIssues() {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            if (registrations.length > 0) {
+              console.log('Unregistering ' + registrations.length + ' service workers to reload fresh resources...');
+              var unregisteredCount = 0;
+              for (var i = 0; i < registrations.length; i++) {
+                registrations[i].unregister().then(function() {
+                  unregisteredCount++;
+                  if (unregisteredCount === registrations.length) {
+                    window.location.reload(true);
+                  }
+                });
+              }
+              // Fallback reload if promise chain hangs
+              setTimeout(function() {
+                window.location.reload(true);
+              }, 1000);
+            } else {
+              window.location.reload(true);
+            }
+          }).catch(function() {
+            window.location.reload(true);
+          });
+        } else {
+          window.location.reload(true);
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx" onerror="recoverFromCacheIssues()"></script>
   </body>
 </html>
 
