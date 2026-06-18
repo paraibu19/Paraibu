@@ -16,28 +16,17 @@
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
           if (registrations && registrations.length > 0) {
-            console.log('Stale service workers detected (' + registrations.length + '). Purging to download fresh application resources...');
-            var cacheClearPromise = Promise.resolve();
+            console.log('Clearing old service workers...');
+            for (var i = 0; i < registrations.length; i++) {
+              registrations[i].unregister();
+            }
             if ('caches' in window) {
-              cacheClearPromise = caches.keys().then(function(keys) {
-                return Promise.all(keys.map(function(key) {
-                  return caches.delete(key);
-                }));
+              caches.keys().then(function(keys) {
+                keys.forEach(function(key) {
+                  caches.delete(key);
+                });
               });
             }
-            cacheClearPromise.then(function() {
-              var unregisterPromises = [];
-              for (var i = 0; i < registrations.length; i++) {
-                unregisterPromises.push(registrations[i].unregister());
-              }
-              return Promise.all(unregisterPromises);
-            }).then(function() {
-              console.log('Purge complete. Performing hot reload...');
-              window.location.reload(true);
-            }).catch(function(err) {
-              console.error('Purge error:', err);
-              window.location.reload(true);
-            });
           }
         });
       }
