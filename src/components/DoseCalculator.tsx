@@ -509,8 +509,8 @@ export default function DoseCalculator() {
             transition={{ delay: 0.2 }}
             className="max-w-2xl space-y-4"
           >
-            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-500/20 backdrop-blur-md border border-blue-400/30 rounded-full text-blue-100 text-xs font-bold uppercase tracking-wider">
-              <Calculator className="w-3 h-3" />
+            <div className={cn("inline-flex items-center gap-2 px-3.5 py-1.5 bg-slate-950/40 backdrop-blur-md border border-white/10 rounded-full text-blue-100 text-xs font-semibold uppercase tracking-wider", isRTL && "flex-row-reverse")}>
+              <img src="/icon.svg" alt="Paraibu Logo" className="w-5 h-5 rounded-md" referrerPolicy="no-referrer" />
               <span>{t.title}</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-black font-display text-white tracking-tight leading-tight">
@@ -849,9 +849,9 @@ export default function DoseCalculator() {
           </div>
           <div className="text-center space-y-8 pt-8 border-t border-gray-100">
             <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                  <Calculator className="w-6 h-6 text-white" />
+              <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg overflow-hidden border border-gray-200">
+                  <img src="/icon.svg" alt="Paraibu Logo" className="w-full h-full object-cover scale-110" referrerPolicy="no-referrer" />
                 </div>
                 <span className="text-3xl font-display font-black uppercase tracking-tighter text-gray-900">
                   Paraibu
