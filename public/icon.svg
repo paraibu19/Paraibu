@@ -1,48 +1,10 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg-grad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#1E1B4B"/>
-      <stop offset="100%" stop-color="#0F172A"/>
-    </linearGradient>
-    <linearGradient id="primary-drop" x1="160" y1="180" x2="320" y2="380" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#38BDF8"/>
-      <stop offset="100%" stop-color="#0284C7"/>
-    </linearGradient>
-    <linearGradient id="secondary-drop" x1="220" y1="180" x2="380" y2="380" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FB7185"/>
-      <stop offset="100%" stop-color="#E11D48"/>
-    </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%" filterUnits="userSpaceOnUse">
-      <feGaussianBlur stdDeviation="24" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
-    <linearGradient id="cross-grad" x1="200" y1="120" x2="312" y2="232" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#F8FAFC"/>
-      <stop offset="100%" stop-color="#E2E8F0"/>
-    </linearGradient>
-  </defs>
-
-  <!-- Premium Application Tile Background -->
-  <rect width="512" height="512" rx="128" fill="url(#bg-grad)"/>
-  
-  <!-- Subtle Glow Accents -->
-  <circle cx="256" cy="256" r="236" stroke="#38BDF8" stroke-width="4" stroke-opacity="0.12"/>
-  <circle cx="256" cy="256" r="244" stroke="#ffffff" stroke-width="2" stroke-opacity="0.04"/>
-  <circle cx="160" cy="320" r="100" fill="#38BDF8" fill-opacity="0.1" filter="url(#glow)"/>
-  <circle cx="352" cy="320" r="100" fill="#FB7185" fill-opacity="0.08" filter="url(#glow)"/>
-
-  <!-- Interlocking Medication Droplets (Syrups / Suspensions) -->
-  <!-- Paracetamol suspension (Sky/Blue) -->
-  <path d="M 256 160 C 256 160 140 280 140 340 C 140 398 188 412 256 412 Z" fill="url(#primary-drop)" opacity="0.9"/>
-  <!-- Ibuprofen suspension (Strawberry Rose Red) -->
-  <path d="M 256 160 C 256 160 372 280 372 340 C 372 398 324 412 256 412 Z" fill="url(#secondary-drop)" opacity="0.85"/>
-  <!-- Highlight Divider -->
-  <path d="M 256 160 V 412" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="3" stroke-linecap="round"/>
-
-  <!-- Centered Professional Pediatric Heart (Warm & Care-focused, without the Cross) -->
-  <g transform="translate(256, 125) scale(2.8) translate(-60, -60)">
-    <!-- Heart Symbol (Friendly Care) -->
-    <path d="M 60 74 C 44 58 50 46 60 46 C 70 46 76 58 60 74 Z" fill="#E11D48" opacity="0.95"/>
-    <path d="M 60 74 C 76 58 70 46 60 46 C 50 46 44 58 60 74 Z" fill="#FB7185" opacity="0.95"/>
+  <rect width="512" height="512" rx="100" fill="#4dabf7"/>
+  <path d="M256 120C180 120 120 180 120 256C120 332 180 392 256 392C332 392 392 332 392 256" stroke="white" stroke-width="32" stroke-linecap="round"/>
+  <path d="M256 392V440" stroke="white" stroke-width="32" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="60" fill="white"/>
+  <g transform="translate(214, 214) scale(3.5)">
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="#4dabf7"/>
   </g>
+  <path d="M392 256C392 200 348 156 292 156" stroke="white" stroke-width="32" stroke-linecap="round"/>
 </svg>
