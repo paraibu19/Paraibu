@@ -39,12 +39,9 @@
   <!-- Highlight Divider -->
   <path d="M 256 160 V 412" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="3" stroke-linecap="round"/>
 
-  <!-- Centered Professional Pediatric Cross & Heart -->
-  <g transform="translate(196, 96)">
-    <!-- Main medical cross -->
-    <path d="M 44 0 H 76 a 12 12 0 0 1 12 12 V 40 H 108 a 12 12 0 0 1 12 12 V 68 a 12 12 0 0 1 -12 12 H 88 V 108 a 12 12 0 0 1 -12 12 H 44 a 12 12 0 0 1 -12 -12 V 80 H 12 a 12 12 0 0 1 -12 -12 V 52 a 12 12 0 0 1 12 -12 H 32 V 12 a 12 12 0 0 1 12 -12 Z" fill="url(#cross-grad)"/>
-    
-    <!-- Heart Symbol engraved inside (Friendly Care) -->
+  <!-- Centered Professional Pediatric Heart (Warm & Care-focused, without the Cross) -->
+  <g transform="translate(256, 125) scale(2.8) translate(-60, -60)">
+    <!-- Heart Symbol (Friendly Care) -->
     <path d="M 60 74 C 44 58 50 46 60 46 C 70 46 76 58 60 74 Z" fill="#E11D48" opacity="0.95"/>
     <path d="M 60 74 C 76 58 70 46 60 46 C 50 46 44 58 60 74 Z" fill="#FB7185" opacity="0.95"/>
   </g>
